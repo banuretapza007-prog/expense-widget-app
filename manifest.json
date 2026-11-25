@@ -1,8 +1,13 @@
 {
-  "balance": 27615,
-  "income": 31500,
-  "expense": 3885,
-  "budget": 15000,
-  "remaining": 11115,
-  "updatedAt": "2026-11-25T07:28:00.925Z"
+  "name": "กระเป๋าตังค์ของฉัน",
+  "short_name": "กระเป๋าตังค์",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f766e",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
 }
