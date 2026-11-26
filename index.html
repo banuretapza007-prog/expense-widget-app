@@ -1499,6 +1499,27 @@ if ("serviceWorker" in navigator) {
             lucide.createIcons();
         });
     </script>
+<style>
+#widget-period-badge { display: none !important; }
+
+#widget-balance, #widget-income, #widget-expense,
+#widget-budget-target, #widget-budget-left-text {
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.widget-card .flex.items-start.justify-between { flex-wrap: wrap; gap: 0.75rem; }
+.widget-card .flex.items-start.justify-between > div:first-child span { white-space: nowrap; }
+
+@media (max-width: 480px) {
+  #widget-balance { font-size: clamp(1.6rem, 9vw, 2.25rem) !important; }
+  #widget-income, #widget-expense { font-size: clamp(0.8rem, 4.2vw, 1.05rem) !important; }
+  .widget-card .grid > div > .w-9 { display: none !important; }
+  .widget-card .grid > div { padding: 0.75rem !important; justify-content: center; }
+  .widget-card .grid > div > div { text-align: center; }
+}
+</style>
 <script src="extras.js"></script>
 </body>
 </html>
