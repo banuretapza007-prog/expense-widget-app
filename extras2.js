@@ -69,7 +69,7 @@ function buildPager(){const main=document.querySelector('main'),pg=document.crea
  const bs=[...bar.querySelectorAll('button')],set=i=>bs.forEach((b,k)=>{b.style.color=k===i?'#059669':'#64748b';b.style.borderTop=k===i?'3px solid #059669':'3px solid transparent'});set(0);let cur=0;
  bs.forEach(b=>b.onclick=()=>{pg.scrollTo({left:+b.dataset.i*pg.clientWidth,behavior:'smooth'});window.scrollTo(0,0)});
  pg.onscroll=()=>{const i=Math.round(pg.scrollLeft/pg.clientWidth);if(i!==cur){cur=i;set(i);window.scrollTo(0,0)}};
- const t=document.createElement('style');t.textContent='#toast-container{bottom:4.5rem !important}#x2-pager::-webkit-scrollbar{display:none}';document.head.appendChild(t)}
+ const t=document.createElement('style');t.textContent='#toast-container{bottom:4.5rem !important}#x2-pager::-webkit-scrollbar{display:none}#transaction-list button.p-2{padding:.3rem !important}#transaction-list .x2dh{margin-top:.75rem}#transaction-list .x2dh:first-child{margin-top:0}';document.head.appendChild(t)}
 
 /* การ์ดหลัก: คาดการณ์ + กราฟรายเดือน + สรุป */
 function render(){renderGoals();renderDebts();const pb=$('x2-pin-btn');if(pb)pb.textContent=x.pin?'🔓 ปิด PIN':'🔒 ตั้ง PIN';const b=$('x2-box');if(!b)return;
@@ -94,6 +94,16 @@ function render(){renderGoals();renderDebts();const pb=$('x2-pin-btn');if(pb)pb.
  const w=$('tx-wallet');if(w){const v=w.value;w.innerHTML=x.wallets.map(k=>`<option value="${k.id}">${k.emoji} ${esc(k.name)}</option>`).join('');if(v&&x.wallets.some(k=>k.id===v))w.value=v}}
 const oR=window.renderAll;window.renderAll=function(){oR();render()};
 
+/* ประวัติแยกรายวัน */
+const oH2=window.renderHistoryList;
+window.renderHistoryList=function(){oH2();const L=$('transaction-list');if(!L)return;
+ const today=formatThaiDateShort(getTodayStr()),G=[];
+ [...L.children].forEach(r=>{const sp=r.querySelectorAll('.text-xs span'),am=r.querySelector('.font-num');if(sp.length<3||!am)return;
+  const dt=sp[2].textContent.trim(),tx=am.textContent,v=parseFloat(tx.replace(/[^0-9.]/g,''))||0;sp[1].style.display='none';sp[2].style.display='none';
+  let g=G[G.length-1];if(!g||g.dt!==dt){g={dt,first:r,inc:0,exp:0};G.push(g)}if(tx.trim().startsWith('-'))g.exp+=v;else g.inc+=v});
+ G.forEach(g=>{const h=document.createElement('div');h.className='x2dh flex justify-between items-center bg-slate-50 rounded-xl px-3 py-2 text-xs';
+  h.innerHTML=`<b class="text-slate-800">📅 ${g.dt}${g.dt===today?' • วันนี้':''}</b><span class="font-num">${g.exp?`<span class="text-rose-600 font-bold">จ่าย ${formatTHB(g.exp)}</span>`:''}${g.exp&&g.inc?' • ':''}${g.inc?`<span class="text-emerald-600 font-bold">รับ ${formatTHB(g.inc)}</span>`:''}</span>`;g.first.before(h)})};
+
 addEventListener('DOMContentLoaded',()=>{
  [['x2-w','👛 กระเป๋า'],['x2-q','⚡ ปุ่มจดด่วน']].forEach(a=>mk(...a));
  const box=document.createElement('section');box.id='x2-box';box.className='bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm space-y-3';
@@ -101,6 +111,7 @@ addEventListener('DOMContentLoaded',()=>{
  $('tx-note').parentElement.insertAdjacentHTML('beforebegin',`<div><label class="block text-xs font-semibold text-slate-600 mb-1">กระเป๋า</label><select id="tx-wallet" class="${I}"></select></div>`);
  const sb=document.querySelector('#modal-settings .border-t'),ST='w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-left text-sm font-semibold text-slate-700 block';
  if(sb)sb.insertAdjacentHTML('afterbegin',`<button id="x2-pin-btn" onclick="closeModal('modal-settings');x2Pin()" class="${ST}">🔒 ตั้ง PIN</button><button onclick="x2Dark()" class="${ST}">🌙 สลับโหมดมืด</button>`);
+ {const h=$('transaction-list').closest('section'),t=h.querySelector('h2'),p=h.querySelector('p');if(t)t.textContent='ประวัติรายวัน';if(p)p.textContent='แยกตามวัน ดูยอดจ่าย/รับรวมของแต่ละวัน แตะ ✏️ เพื่อแก้ไข';}
  buildPager();lastN=state.transactions.length;renderAll();
  const a=new URLSearchParams(location.search).get('action');
  if(a){history.replaceState(null,'',location.pathname);setTimeout(()=>{if(a==='scan'&&$('slip-file-input'))$('slip-file-input').click();else{$('tx-amount').scrollIntoView({block:'center'});$('tx-amount').focus()}},400)}
