@@ -94,15 +94,19 @@ function render(){renderGoals();renderDebts();const pb=$('x2-pin-btn');if(pb)pb.
  const w=$('tx-wallet');if(w){const v=w.value;w.innerHTML=x.wallets.map(k=>`<option value="${k.id}">${k.emoji} ${esc(k.name)}</option>`).join('');if(v&&x.wallets.some(k=>k.id===v))w.value=v}}
 const oR=window.renderAll;window.renderAll=function(){oR();render()};
 
-/* ประวัติแยกรายวัน */
+/* ประวัติทีละวัน */
+let day=getTodayStr();
+const addD=(t,n)=>{const d=new Date(t+'T12:00:00');d.setDate(d.getDate()+n);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+window.x2SetDay=v=>{day=v||getTodayStr();const ym=day.slice(0,7);if(ym!==state.selectedMonthFilter&&state.transactions.some(t=>t.date===day))state.selectedMonthFilter=ym;renderAll()};
+window.x2Day=n=>x2SetDay(addD(day,n));
 const oH2=window.renderHistoryList;
-window.renderHistoryList=function(){oH2();const L=$('transaction-list');if(!L)return;
- const today=formatThaiDateShort(getTodayStr()),G=[];
+window.renderHistoryList=function(){oH2();const L=$('transaction-list'),inp=$('x2-day');if(inp)inp.value=day;if(!L)return;
+ const want=formatThaiDateShort(day);let inc=0,exp=0,n=0;
  [...L.children].forEach(r=>{const sp=r.querySelectorAll('.text-xs span'),am=r.querySelector('.font-num');if(sp.length<3||!am)return;
-  const dt=sp[2].textContent.trim(),tx=am.textContent,v=parseFloat(tx.replace(/[^0-9.]/g,''))||0;sp[1].style.display='none';sp[2].style.display='none';
-  let g=G[G.length-1];if(!g||g.dt!==dt){g={dt,first:r,inc:0,exp:0};G.push(g)}if(tx.trim().startsWith('-'))g.exp+=v;else g.inc+=v});
- G.forEach(g=>{const h=document.createElement('div');h.className='x2dh flex justify-between items-center bg-slate-50 rounded-xl px-3 py-2 text-xs';
-  h.innerHTML=`<b class="text-slate-800">📅 ${g.dt}${g.dt===today?' • วันนี้':''}</b><span class="font-num">${g.exp?`<span class="text-rose-600 font-bold">จ่าย ${formatTHB(g.exp)}</span>`:''}${g.exp&&g.inc?' • ':''}${g.inc?`<span class="text-emerald-600 font-bold">รับ ${formatTHB(g.inc)}</span>`:''}</span>`;g.first.before(h)})};
+  if(sp[2].textContent.trim()!==want){r.remove();return}
+  const tx=am.textContent,v=parseFloat(tx.replace(/[^0-9.]/g,''))||0;sp[1].style.display='none';sp[2].style.display='none';n++;if(tx.trim().startsWith('-'))exp+=v;else inc+=v});
+ const sm=$('x2-daysum');if(sm)sm.innerHTML=`<b>📅 ${want}${day===getTodayStr()?' (วันนี้)':''}</b>`+(n?` • ${n} รายการ${exp?` • <span class="text-rose-600 font-bold">จ่าย ${formatTHB(exp)}</span>`:''}${inc?` • <span class="text-emerald-600 font-bold">รับ ${formatTHB(inc)}</span>`:''}`:' • ไม่มีรายการ');
+ $('transaction-empty').classList.toggle('hidden',n>0)};
 
 addEventListener('DOMContentLoaded',()=>{
  [['x2-w','👛 กระเป๋า'],['x2-q','⚡ ปุ่มจดด่วน']].forEach(a=>mk(...a));
@@ -111,7 +115,9 @@ addEventListener('DOMContentLoaded',()=>{
  $('tx-note').parentElement.insertAdjacentHTML('beforebegin',`<div><label class="block text-xs font-semibold text-slate-600 mb-1">กระเป๋า</label><select id="tx-wallet" class="${I}"></select></div>`);
  const sb=document.querySelector('#modal-settings .border-t'),ST='w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-left text-sm font-semibold text-slate-700 block';
  if(sb)sb.insertAdjacentHTML('afterbegin',`<button id="x2-pin-btn" onclick="closeModal('modal-settings');x2Pin()" class="${ST}">🔒 ตั้ง PIN</button><button onclick="x2Dark()" class="${ST}">🌙 สลับโหมดมืด</button>`);
- {const h=$('transaction-list').closest('section'),t=h.querySelector('h2'),p=h.querySelector('p');if(t)t.textContent='ประวัติรายวัน';if(p)p.textContent='แยกตามวัน ดูยอดจ่าย/รับรวมของแต่ละวัน แตะ ✏️ เพื่อแก้ไข';}
+ {const h=$('transaction-list').closest('section'),t=h.querySelector('h2'),p=h.querySelector('p');if(t)t.textContent='ประวัติรายวัน';if(p)p.textContent='ดูทีละวัน กดลูกศรหรือเลือกวันที่เพื่อดูย้อนหลัง แตะ ✏️ เพื่อแก้ไข';
+  $('transaction-list').insertAdjacentHTML('beforebegin',`<div class="flex items-center gap-2 mb-2"><button onclick="x2Day(-1)" class="${BT}">‹</button><input id="x2-day" type="date" onchange="x2SetDay(this.value)" class="${I} flex-1 text-center"><button onclick="x2Day(1)" class="${BT}">›</button><button onclick="x2SetDay('')" class="${BT}">วันนี้</button></div><p id="x2-daysum" class="text-xs text-slate-600 mb-1"></p>`);
+  const fm=$('filter-month');if(fm)fm.style.display='none'}
  buildPager();lastN=state.transactions.length;renderAll();
  const a=new URLSearchParams(location.search).get('action');
  if(a){history.replaceState(null,'',location.pathname);setTimeout(()=>{if(a==='scan'&&$('slip-file-input'))$('slip-file-input').click();else{$('tx-amount').scrollIntoView({block:'center'});$('tx-amount').focus()}},400)}
